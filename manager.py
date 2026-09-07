@@ -9,7 +9,7 @@ from keep_alive import keep_alive
 print("--- Launching Brand New Apex Engine ---", flush=True)
 
 # আপনার বটের টোকেন
-BOT_TOKEN = "8967415594:AAEIT1ql8qER5mdZ1coMyqScRMU7KXmLu4k"
+BOT_TOKEN = "8967415594:AAFm-Rp8XHSvWqxY6xxthGDYWRGDxNCwYDQ"
 bot = telebot.TeleBot(BOT_TOKEN, threaded=True)
 
 ADMIN_USER_ID = 8243644026
