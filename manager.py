@@ -8,7 +8,7 @@ from keep_alive import keep_alive
 
 print("--- Launching High-Converting Premium Ads Engine ---", flush=True)
 
-BOT_TOKEN = "8967415594:AAH_mwp0D8ExAHag1dcO7DO5YuPB1zll-GY"
+BOT_TOKEN = "8967415594:AAG6uceO3FPSPKkbPm8X6xFjA_NHA9UHoIU"
 bot = telebot.TeleBot(BOT_TOKEN, threaded=False)
 
 ADMIN_USER_ID = 8243644026
