@@ -8,7 +8,7 @@ from keep_alive import keep_alive
 
 print("--- Launching Fully Working Ads Engine ---", flush=True)
 
-BOT_TOKEN = "8967415594:AAE4VSVi_2zTriTLmQsJYzzFWm8OeQnaZmI"
+BOT_TOKEN = "8967415594:AAHVZWYsgz6oXBUdSkdjdrjTOTuHucif6mc"
 bot = telebot.TeleBot(BOT_TOKEN, threaded=False)
 
 # আপনার সঠিক টেলিগ্রাম আইডি
