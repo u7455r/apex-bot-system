@@ -6,11 +6,12 @@ import telebot
 from telebot import types
 from keep_alive import keep_alive
 
-print("--- Launching High-Converting Premium Ads Engine ---", flush=True)
+print("--- Launching Fully Working Ads Engine ---", flush=True)
 
 BOT_TOKEN = "8967415594:AAG6uceO3FPSPKkbPm8X6xFjA_NHA9UHoIU"
 bot = telebot.TeleBot(BOT_TOKEN, threaded=False)
 
+# আপনার সঠিক টেলিগ্রাম আইডি
 ADMIN_USER_ID = 8243644026
 ADMIN_USERNAME = "rafimhossen"
 
@@ -34,34 +35,39 @@ def init_db():
         trx_id TEXT,
         status TEXT
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY)''')
     conn.commit()
     conn.close()
 
 init_db()
 
-# আকর্ষণীয় অফার প্যাকেজ তালিকা
+def log_user(user):
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("INSERT OR IGNORE INTO users VALUES (?)", (user.id,))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
 AD_PACKAGES = {
-    "pkg1": {"name": "⚡ ১টি ইনস্ট্যান্ট চ্যানেল পোস্ট", "price": "৫০ ৳", "desc": "দ্রুত চ্যানেল গ্রোথের জন্য সেরা"},
-    "pkg2": {"name": "📌 ২৪ ঘণ্টা ভিআইপি পিন পোস্ট", "price": "১০০ ৳", "desc": "টপ ভিউ ও সর্বোচ্চ মেম্বার নিশ্চিত"},
-    "pkg3": {"name": "🔥 ৩ দিনের মেগা পাওয়ার বুস্ট", "price": "২৫০ ৳", "desc": "সবচেয়ে জনপ্রিয় & সর্বাধিক ট্রাফিক"}
+    "pkg1": {"name": "⚡ ১টি ইনস্ট্যান্ট চ্যানেল পোস্ট", "price": "৫০ ৳"},
+    "pkg2": {"name": "📌 ২৪ ঘণ্টা ভিআইপি পিন পোস্ট", "price": "১০০ ৳"},
+    "pkg3": {"name": "🔥 ৩ দিনের মেগা পাওয়ার বুস্ট", "price": "২৫০ ৳"}
 }
 
-# ==================== কীবোর্ড ডিজাইন ====================
-
-# নিচের চারকোনা পার্মানেন্ট মেনু
-def get_bottom_keyboard():
+# ==================== কীবোর্ড লেআউট ====================
+def get_bottom_keyboard(user_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add(
-        types.KeyboardButton("🚀 বিজ্ঞাপন বুক করুন"),
-        types.KeyboardButton("💳 নগদ পেমেন্ট তথ্য")
-    )
-    markup.add(
-        types.KeyboardButton("📜 প্রিমিয়াম নীতিমালা"),
-        types.KeyboardButton("👑 ওনার ডিরেক্ট সাপোর্ট")
-    )
+    markup.add(types.KeyboardButton("🚀 বিজ্ঞাপন বুক করুন 📢"), types.KeyboardButton("💳 নগদ পেমেন্ট তথ্য ⚡"))
+    markup.add(types.KeyboardButton("📜 প্রিমিয়াম নীতিমালা 🛡️"), types.KeyboardButton("💬 ওনার ডিরেক্ট সাপোর্ট ↗"))
+    
+    # শুধু ওনারের ফোনে এই স্পেশাল বাটনটি আসবে
+    if user_id == ADMIN_USER_ID:
+        markup.add(types.KeyboardButton("👑 পেন্ডিং অর্ডার দেখুন (Admin)"))
     return markup
 
-# ইনলাইন ড্যাশবোর্ড
 def get_clean_dashboard():
     m = types.InlineKeyboardMarkup(row_width=1)
     m.add(types.InlineKeyboardButton("🔥 সেরা বিজ্ঞাপন প্যাকেজ ও রেট দেখুন 📊", callback_data="view_packages"))
@@ -70,7 +76,6 @@ def get_clean_dashboard():
     m.add(types.InlineKeyboardButton("👑 ওনার ইনবক্স (@rafimhossen) 💬", url=f"https://t.me/{ADMIN_USERNAME}"))
     return m
 
-# ব্যাক বাটন
 def get_back_button():
     m = types.InlineKeyboardMarkup(row_width=1)
     m.add(types.InlineKeyboardButton("⬅️ প্রধান মেনুতে ফিরে যান (Home)", callback_data="go_home"))
@@ -79,57 +84,82 @@ def get_back_button():
 # ==================== মূল হ্যান্ডলার ====================
 @bot.message_handler(commands=['start', 'help'])
 def handle_start(message):
+    log_user(message.from_user)
+    u_id = message.from_user.id
     u_name = message.from_user.first_name
+
     welcome_text = (
         f"👑 **স্বাগতম, {u_name}!** ✨\n\n"
-        f"🎯 আপনার টেলিগ্রাম চ্যানেল, গ্রুপ কিংবা অনলাইন বিজনেসকে নিমেষেই বড় করতে চান?\n"
-        f"📢 আমাদের হাই-অ্যাক্টিভ চ্যানেল **{TARGET_CHANNEL}**-এ প্রতিদিন হাজার হাজার মানুষের কাছে বিজ্ঞাপন পৌঁছানোর এটাই সেরা সুযোগ! 🚀\n\n"
-        "👇 **নিজের সুবিধাজনক অপশনটি বেছে নিতে নিচের বাটনে চাপ দিন:**"
+        f"📢 আমাদের হাই-অ্যাক্টিভ চ্যানেল **{TARGET_CHANNEL}**-এ বিজ্ঞাপন বুক করতে নিচের অপশন ব্যবহার করুন:"
     )
-    bot.send_message(message.chat.id, "🔘 মেনু প্যানেল লোড হয়েছে", reply_markup=get_bottom_keyboard())
+    bot.send_message(message.chat.id, "🔘 মেনু প্যানেল সক্রিয় হয়েছে ⚡", reply_markup=get_bottom_keyboard(u_id))
     bot.send_message(message.chat.id, welcome_text, reply_markup=get_clean_dashboard(), parse_mode='Markdown')
 
-# পার্মানেন্ট কীবোর্ড রেসপন্স
+# পেন্ডিং অর্ডার দেখার ফাংশন
+def display_pending_orders(chat_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT order_id, user_name, package, ad_text, photo_id, trx_id FROM orders WHERE status='PENDING'")
+    rows = c.fetchall()
+    conn.close()
+
+    if not rows:
+        bot.send_message(chat_id, "📭 বর্তমানে কোনো পেন্ডিং অর্ডার নেই!")
+        return
+
+    bot.send_message(chat_id, f"📋 **মোট {len(rows)} টি পেন্ডিং বিজ্ঞাপন রয়েছে:**")
+    for r in rows:
+        order_id, user_name, package, ad_text, photo_id, trx_id = r
+        m = types.InlineKeyboardMarkup(row_width=2)
+        m.add(
+            types.InlineKeyboardButton("✅ এক ক্লিকে অনুমোদন ও পোস্ট", callback_data=f"post_ok_{order_id}"),
+            types.InlineKeyboardButton("❌ বাতিল", callback_data=f"post_no_{order_id}")
+        )
+        caption = (
+            f"🆔 অর্ডার নম্বর: `#{order_id}`\n"
+            f"👤 ক্লায়েন্ট: {user_name}\n"
+            f"📦 প্যাকেজ: **{package}**\n"
+            f"🧾 নগদ TrxID: `{trx_id}`\n\n"
+            f"📄 বিজ্ঞাপনের কনটেন্ট:\n{ad_text}"
+        )
+        if photo_id:
+            bot.send_photo(chat_id, photo_id, caption=caption, reply_markup=m, parse_mode='Markdown')
+        else:
+            bot.send_message(chat_id, caption, reply_markup=m, parse_mode='Markdown')
+
+@bot.message_handler(commands=['orders', 'myid'])
+def handle_special_commands(message):
+    if message.text == '/myid':
+        bot.reply_to(message, f"🆔 আপনার আইডি: `{message.from_user.id}`", parse_mode='Markdown')
+        return
+    if message.text == '/orders':
+        display_pending_orders(message.chat.id)
+
 @bot.message_handler(func=lambda msg: msg.text in [
-    "🚀 বিজ্ঞাপন বুক করুন", "💳 নগদ পেমেন্ট তথ্য", "📜 প্রিমিয়াম নীতিমালা", "👑 ওনার ডিরেক্ট সাপোর্ট"
+    "🚀 বিজ্ঞাপন বুক করুন 📢", "💳 নগদ পেমেন্ট তথ্য ⚡", "📜 প্রিমিয়াম নীতিমালা 🛡️",
+    "💬 ওনার ডিরেক্ট সাপোর্ট ↗", "👑 পেন্ডিং অর্ডার দেখুন (Admin)"
 ])
 def handle_menu_options(message):
     txt = message.text
-
-    if txt == "🚀 বিজ্ঞাপন বুক করুন":
+    if txt == "🚀 বিজ্ঞাপন বুক করুন 📢":
         show_packages(message.chat.id)
-    elif txt == "💳 নগদ পেমেন্ট তথ্য":
+    elif txt == "💳 নগদ পেমেন্ট তথ্য ⚡":
         show_payment_info(message.chat.id)
-    elif txt == "📜 প্রিমিয়াম নীতিমালা":
-        show_rules_info(message.chat.id)
-    elif txt == "👑 ওনার ডিরেক্ট সাপোর্ট":
+    elif txt == "📜 প্রিমিয়াম নীতিমালা 🛡️":
+        bot.send_message(message.chat.id, "📜 সঠিক TrxID দিয়ে পেমেন্ট করুন। ওনার যাচাই করে চ্যানেলে পোস্ট করে দেবেন।", reply_markup=get_back_button())
+    elif txt == "💬 ওনার ডিরেক্ট সাপোর্ট ↗":
         m = types.InlineKeyboardMarkup()
-        m.add(types.InlineKeyboardButton("💬 ওনারের ইনবক্সে মেসেজ দিন ↗", url=f"https://t.me/{ADMIN_USERNAME}"))
-        bot.send_message(
-            message.chat.id,
-            f"👑 **ডিরেক্ট ভিআইপি সাপোর্ট:**\n\nযেকোনো জরুরি জিজ্ঞাসা, কাস্টম ডিল বা সহায়তার জন্য সরাসরি ওনারকে ইনবক্স করুন:\n👉 @{ADMIN_USERNAME}",
-            reply_markup=m,
-            parse_mode='Markdown'
-        )
+        m.add(types.InlineKeyboardButton("💬 সরাসরি ইনবক্সে মেসেজ দিন ↗", url=f"https://t.me/{ADMIN_USERNAME}"))
+        bot.send_message(message.chat.id, f"👑 ওনার যোগাযোগ:\n👉 @{ADMIN_USERNAME}", reply_markup=m)
+    elif txt == "👑 পেন্ডিং অর্ডার দেখুন (Admin)":
+        display_pending_orders(message.chat.id)
 
-# ==================== তথ্যবহুল পেজসমূহ ====================
 def show_packages(chat_id, message_id=None):
     m = types.InlineKeyboardMarkup(row_width=1)
     for k, v in AD_PACKAGES.items():
         m.add(types.InlineKeyboardButton(f"{v['name']} ➔ {v['price']}", callback_data=f"buy_{k}"))
     m.add(types.InlineKeyboardButton("⬅️ প্রধান মেনুতে ফিরে যান (Home)", callback_data="go_home"))
-
-    text = (
-        f"💎 **{TARGET_CHANNEL} অফিশিয়াল প্রমোশন ডিলস** 💎\n\n"
-        "⚡ **প্যাকেজ তালিকা ও স্পেশাল অফার:**\n\n"
-        "১️⃣ **১টি সাধারণ পোস্ট:** মাত্র ৫০ ৳\n"
-        "└ 🎯 *স্ট্যান্ডার্ড রিচ ও দ্রুত সাবস্ক্রাইবার বৃদ্ধির জন্য।*\n\n"
-        "২️⃣ **২৪ ঘণ্টা ভিআইপি পিন পোস্ট:** মাত্র ১০০ ৳\n"
-        "└ 📌 *পোস্ট সবার উপরে পিন থাকবে, যাতে কেউ মিস না করে! (বেস্ট চয়েস)*\n\n"
-        "৩️⃣ **৩ দিনের মেগা পাওয়ার বুস্ট:** মাত্র ২৫০ ৳\n"
-        "└ 🔥 *একটানা ৩ দিন সর্বোচ্চ মেম্বার ও সেলস ড্রাইভ করার সেরা সুযোগ!*\n\n"
-        "👇 **যে প্যাকেজটি বুক করতে চান, নিচের বাটনে আলতো চাপ দিন:**"
-    )
+    text = f"💎 **{TARGET_CHANNEL} অফিশিয়াল প্রমোশন ডিলস**\n\n👇 প্যাকেজ বেছে নিন:"
     if message_id:
         try:
             bot.edit_message_text(text, chat_id, message_id, reply_markup=m, parse_mode='Markdown')
@@ -139,17 +169,7 @@ def show_packages(chat_id, message_id=None):
         bot.send_message(chat_id, text, reply_markup=m, parse_mode='Markdown')
 
 def show_payment_info(chat_id, message_id=None):
-    text = (
-        "💳 **অফিশিয়াল নগদ পার্সোনাল গেটওয়ে** ⚡\n\n"
-        f"📱 **নগদ নম্বর (Personal):**\n"
-        f"👉 `{NAGAD_NUMBER}` 👈 *(কপি করতে নম্বরে ট্যাপ করুন)*\n\n"
-        "━━━━━━━━━━━━━━━━━━━\n"
-        "✨ **পেমেন্ট করার সহজ ধাপসমূহ:**\n"
-        "১. নগদ অ্যাপ বা ডায়াল কোড থেকে উপরের নম্বরে **Send Money** করুন।\n"
-        "২. টাকা সফলভাবে যাওয়ার পর এসএমএস থেকে প্রাপ্ত **TrxID** টি কপি করে রাখুন।\n"
-        "৩. বিজ্ঞাপন বুকিংয়ের সময় TrxID টি বটে সেন্ড করে দিলেই ওনার দ্রুত অ্যাপ্রুভ করে দেবেন।\n"
-        "━━━━━━━━━━━━━━━━━━━"
-    )
+    text = f"💳 **নগদ পার্সোনাল গেটওয়ে:**\n📱 নম্বর: `{NAGAD_NUMBER}` *(ট্যাপ করলেই কপি)*\n\nটাকা পাঠানোর পর নগদ থেকে প্রাপ্ত TrxID বটের কাছে লিখে পাঠান।"
     if message_id:
         try:
             bot.edit_message_text(text, chat_id, message_id, reply_markup=get_back_button(), parse_mode='Markdown')
@@ -158,34 +178,18 @@ def show_payment_info(chat_id, message_id=None):
     else:
         bot.send_message(chat_id, text, reply_markup=get_back_button(), parse_mode='Markdown')
 
-def show_rules_info(chat_id):
-    text = (
-        "📜 **বিজ্ঞাপনের গুরুত্বপূর্ণ নীতিমালা** 🛡️\n\n"
-        "🔹 **১.** কোনো প্রকার বেআইনি, ১৮+ বা বিভ্রান্তিকর স্ক্যাম পোস্ট অনুমোদিত নয়।\n"
-        "🔹 **২.** টাকা পাঠানোর পর সঠিক TrxID সাবমিট করতে হবে, ভুল তথ্যে অর্ডার বাতিল হবে।\n"
-        "🔹 **৩.** ওনার নগদ যাচাই করার পর বিজ্ঞাপনটি স্বয়ংক্রিয়ভাবে চ্যানেলে পোস্ট করে পিন করে দেবেন।\n\n"
-        "🤝 সততা ও বিশ্বস্ততার সাথে এগিয়ে চলাই আমাদের লক্ষ্য!"
-    )
-    bot.send_message(chat_id, text, reply_markup=get_back_button(), parse_mode='Markdown')
-
-# ==================== ইনলাইন কলব্যাক হ্যান্ডলার ====================
 @bot.callback_query_handler(func=lambda c: True)
 def handle_callbacks(call):
     data = call.data
     chat_id = call.message.chat.id
     msg_id = call.message.message_id
-
     try:
         bot.answer_callback_query(call.id)
     except Exception:
         pass
 
     if data == "go_home":
-        welcome_text = (
-            f"👑 **স্বাগতম, {call.from_user.first_name}!** ✨\n\n"
-            f"🎯 আপনার টেলিগ্রাম চ্যানেল বা প্রজেক্ট প্রমোশন করতে নিচের যেকোনো অপশন ব্যবহার করুন:\n"
-            f"📢 অফিসিয়াল চ্যানেল: **{TARGET_CHANNEL}**"
-        )
+        welcome_text = f"👑 **স্বাগতম, {call.from_user.first_name}!**"
         try:
             bot.edit_message_text(welcome_text, chat_id, msg_id, reply_markup=get_clean_dashboard(), parse_mode='Markdown')
         except Exception:
@@ -197,38 +201,19 @@ def handle_callbacks(call):
     elif data.startswith("buy_"):
         pkg_key = data.replace("buy_", "")
         pkg = AD_PACKAGES[pkg_key]
-
-        msg = bot.send_message(
-            chat_id,
-            f"🎯 আপনি বেছে নিয়েছেন: **{pkg['name']}**\n\n"
-            "✍️ **বিজ্ঞাপনের কনটেন্ট পাঠান:**\n"
-            "আপনার বিজ্ঞাপনের পুরো লেখা ও লিংক (অথবা ছবি সহ ক্যাপশন) লিখে এই ইনবক্সে সেন্ড করুন:",
-            parse_mode='Markdown'
-        )
+        msg = bot.send_message(chat_id, f"📝 আপনি বেছে নিয়েছেন: **{pkg['name']}**\n\nবিজ্ঞাপনের ক্যাপশন ও লিংক (অথবা ছবি সহ ক্যাপশন) পাঠান:")
         bot.register_next_step_handler(msg, step_receive_ad_content, pkg_key)
     elif data.startswith(("post_ok_", "post_no_")):
         handle_owner_decision(call)
 
-# ==================== কনটেন্ট ও TrxID গ্রহণ ====================
 def step_receive_ad_content(message, pkg_key):
     ad_text = message.text or message.caption or ""
     photo_id = message.photo[-1].file_id if message.photo else None
-
     if not ad_text and not photo_id:
-        bot.reply_to(message, "⚠️ বিজ্ঞাপনের কোনো কনটেন্ট পাওয়া যায়নি! অনুগ্রহ করে পুনরায় /start দিন।")
+        bot.reply_to(message, "⚠️ কোনো তথ্য পাওয়া যায়নি! পুনরায় /start দিন।")
         return
-
     pkg = AD_PACKAGES[pkg_key]
-    pay_prompt = (
-        "🎉 **বিজ্ঞাপন সাবমিট সফল হয়েছে!**\n\n"
-        f"📦 প্যাকেজ: **{pkg['name']}**\n"
-        f"💵 ফি: **{pkg['price']}**\n\n"
-        "━━━━━━━━━━━━━━━━━━━\n"
-        f"📱 নগদ পার্সোনাল নম্বর: `{NAGAD_NUMBER}` *(ট্যাপ করলেই কপি)*\n"
-        f"💸 সেন্ড মানি করুন: **{pkg['price']}**\n"
-        "━━━━━━━━━━━━━━━━━━━\n\n"
-        "টাকা পাঠানো শেষ হলে নগদ থেকে আসা **TrxID (Transaction ID)** টি নিচে মেসেজ করুন:"
-    )
+    pay_prompt = f"💳 **নগদ নম্বর:** `{NAGAD_NUMBER}`\n💸 সেন্ড মানি ফি: **{pkg['price']}**\n\nটাকা পাঠানোর পর প্রাপ্ত **TrxID** টি নিচে লিখুন:"
     msg = bot.send_message(message.chat.id, pay_prompt, parse_mode='Markdown')
     bot.register_next_step_handler(msg, step_receive_trx, pkg['name'], ad_text, photo_id)
 
@@ -245,49 +230,40 @@ def step_receive_trx(message, pkg_name, ad_text, photo_id):
     conn.commit()
     conn.close()
 
-    bot.reply_to(message, "✅ **আপনার পেমেন্ট রিকোয়েস্ট জমা হয়েছে!**\n\nঅ্যাডমিন নগদ যাচাই করার সাথে সাথেই পোস্ট স্বয়ংক্রিয়ভাবে চ্যানেলে লাইভ হয়ে যাবে। ধন্যবাদ! 💖")
+    bot.reply_to(message, "✅ **আপনার পেমেন্ট রিকোয়েস্ট জমা হয়েছে!**\nঅ্যাডমিন নগদ যাচাই করার পর চ্যানেলে পোস্ট করে দেবেন।")
 
-    # ওনারের ইনবক্সে প্রিভিউ ও অনুমোদন বাটন
+    # ওনারকে অ্যালার্ট পাঠানো
     m = types.InlineKeyboardMarkup(row_width=2)
     m.add(
         types.InlineKeyboardButton("✅ এক ক্লিকে অনুমোদন ও পোস্ট", callback_data=f"post_ok_{order_id}"),
         types.InlineKeyboardButton("❌ বাতিল", callback_data=f"post_no_{order_id}")
     )
-
     alert = (
-        "🚨 **নতুন প্রিমিয়াম বিজ্ঞাপন বুকিং এসেছে!**\n\n"
+        "🚨 **নতুন বিজ্ঞাপন বুকিং এসেছে!**\n\n"
         f"🆔 অর্ডার নম্বর: `#{order_id}`\n"
         f"👤 ক্লায়েন্ট: {u_name}\n"
         f"📦 প্যাকেজ: **{pkg_name}**\n"
         f"🧾 নগদ TrxID: `{trx_id}`\n\n"
-        "👇 **পোস্ট প্রিভিউ নিচে দেখুন:**"
+        "👇 **বিজ্ঞাপনের প্রিভিউ:**"
     )
-    bot.send_message(ADMIN_USER_ID, alert, parse_mode='Markdown')
-
-    if photo_id:
-        bot.send_photo(ADMIN_USER_ID, photo_id, caption=ad_text, reply_markup=m)
-    else:
-        bot.send_message(ADMIN_USER_ID, f"📄 **ক্যাপশন:**\n{ad_text}", reply_markup=m)
-
-# ==================== ওনার অনুমোদন হ্যান্ডলিং ====================
-def handle_owner_decision(call):
-    if call.from_user.id != ADMIN_USER_ID:
-        return
-
-    action, order_id = call.data.split("_")[1], call.data.split("_")[2]
-
     try:
-        bot.answer_callback_query(call.id)
-    except Exception:
-        pass
+        bot.send_message(ADMIN_USER_ID, alert, parse_mode='Markdown')
+        if photo_id:
+            bot.send_photo(ADMIN_USER_ID, photo_id, caption=ad_text, reply_markup=m)
+        else:
+            bot.send_message(ADMIN_USER_ID, f"📄 **ক্যাপশন:**\n{ad_text}", reply_markup=m)
+    except Exception as e:
+        print(f"Alert error: {e}")
 
+def handle_owner_decision(call):
+    action, order_id = call.data.split("_")[1], call.data.split("_")[2]
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT user_id, package, ad_text, photo_id FROM orders WHERE order_id=? AND status='PENDING'", (order_id,))
     row = c.fetchone()
 
     if not row:
-        bot.answer_callback_query(call.id, "এই অর্ডারটি ইতিমধ্যে সম্পন্ন বা বাতিল হয়েছে!")
+        bot.answer_callback_query(call.id, "অর্ডারটি ইতিমধ্যে সম্পন্ন হয়েছে!")
         conn.close()
         return
 
@@ -307,20 +283,18 @@ def handle_owner_decision(call):
             if "পিন" in pkg_name or "বুস্ট" in pkg_name:
                 bot.pin_chat_message(TARGET_CHANNEL, p_msg.message_id)
         except Exception as e:
-            bot.send_message(ADMIN_USER_ID, f"⚠️ চ্যানেলে পোস্ট করতে ত্রুটি: {e}")
+            bot.send_message(call.message.chat.id, f"⚠️ চ্যানেলে পোস্ট করতে সমস্যা: {e}")
 
-        bot.send_message(client_id, f"🎉 **অভিনন্দন! আপনার বিজ্ঞাপনটি সফলভাবে {TARGET_CHANNEL} চ্যানেলে পোস্ট করা হয়েছে!** 🚀")
+        bot.send_message(client_id, f"🎉 **আপনার বিজ্ঞাপনটি সফলভাবে {TARGET_CHANNEL} চ্যানেলে পোস্ট করা হয়েছে!** 🚀")
         bot.edit_message_text(f"✅ অর্ডার `#{order_id}` অনুমোদিত এবং চ্যানেলে পোস্ট সম্পন্ন!", call.message.chat.id, call.message.message_id)
 
     elif action == "no":
         c.execute("UPDATE orders SET status='REJECTED' WHERE order_id=?", (order_id,))
         conn.commit()
         conn.close()
-
-        bot.send_message(client_id, "❌ আপনার পেমেন্ট তথ্যে অসঙ্গতি থাকায় বিজ্ঞাপনটি বাতিল করা হয়েছে। প্রয়োজনে যোগাযোগ করুন: @" + ADMIN_USERNAME)
+        bot.send_message(client_id, "❌ আপনার পেমেন্ট মেলেনি। যোগাযোগ: @" + ADMIN_USERNAME)
         bot.edit_message_text(f"❌ অর্ডার `#{order_id}` বাতিল করা হয়েছে!", call.message.chat.id, call.message.message_id)
 
-# ==================== RUNNER ====================
 if __name__ == '__main__':
     keep_alive()
     try:
@@ -328,12 +302,9 @@ if __name__ == '__main__':
         time.sleep(1)
     except Exception:
         pass
-
-    bot_info = bot.get_me()
-    print(f"Premium High-Converting Engine Live: @{bot_info.username}", flush=True)
-
+    print("Bot Active", flush=True)
     while True:
         try:
             bot.infinity_polling(skip_pending=True, timeout=10, long_polling_timeout=10)
-        except Exception as e:
+        except Exception:
             time.sleep(3)
